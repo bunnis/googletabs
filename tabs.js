@@ -47,16 +47,16 @@ function tabUpdatedListener(tabId, changeInfo, tab) { //this event does not get 
     //alert("Tab Updated");
     chrome.tabs.query({currentWindow: false}, function (tabs) {
         //console.log("updated all tabs - tab updated");
-        allTabs = tabs;
+        //alert(oi);
+        //only when loading do we have url present
+        if (changeInfo.status == 'complete') {
+            //if url contains chrome:// or chrome://newtab dont add
+            allTabs = tabs;
+            console.log("updated - alltabs len " + allTabs.length);
+        }
+
     });
 }
-function loadSync() {
-    chrome.storage.sync.get(['allTabs', 'oldTabs', 'version', 'syncversion'], function (items) {
-        allTabs = items.allTabs;
-    });
-}
-
-
 function windowCreatedListener(window) {
 
 
@@ -129,7 +129,7 @@ function windowCreatedListener(window) {
         }
 
         //enable listeners
-        enableListeners()
+        enableListeners();
     });
 
 
@@ -147,6 +147,12 @@ function windowRemovedListener(windowId) {
     //syncUpdate();
     //scheduleSync();
 }
+function loadSync() {
+    chrome.storage.sync.get(['allTabs', 'oldTabs', 'version', 'syncversion'], function (items) {
+        allTabs = items.allTabs;
+        console.log("sync load alltabs=" + allTabs);
+    });
+}
 function syncUpdate() {
     var syncVersion = timeStamp();
     console.log('update started -sync ' + syncVersion);
@@ -155,11 +161,15 @@ function syncUpdate() {
         // Notify that we saved.
 
         lastSyncVersion = syncVersion;
+        var ta = "null";
 
-        console.log('Settings saved on sync -' + syncVersion + ' alltabs length ' + allTabs.length);
+        if (allTabs) {
+            t = allTabs.length;
+        }
+        console.log('Settings saved on sync -' + syncVersion + ' alltabs length ' + t);
     });
 }
-function scheduleSync() {
+function scheduleSync() {//schedule requests between 1 and 60 min
     console.log('Schedule Request');
     var randomness = Math.random() * 2;
     var exponent = Math.pow(2, requestFailureCount || 0);
@@ -179,6 +189,7 @@ function onAlarm(alarm) {
     console.log('Got alarm', alarm);
 
     syncUpdate();
+
     scheduleSync();
 }
 function timeStamp() {
@@ -200,15 +211,11 @@ function onInit() {
 
     //schedule a new alarm when starting chrome
     //load sync data
-    loadSync();
-    scheduleSync();
+
+
     windowCreatedListener();
 }
 function enableListeners() {
-    console.log("Enable Listeners started.");
-    chrome.runtime.onStartup.addListener(onInit);
-    chrome.alarms.onAlarm.addListener(onAlarm);
-
     chrome.windows.onCreated.addListener(windowCreatedListener);
     chrome.windows.onRemoved.addListener(windowRemovedListener);
 
@@ -219,12 +226,11 @@ function enableListeners() {
     //chrome.runtime.onInstalled.addListener(function callback)
     //open options page
 
-    console.log("Enable Listeners finished.");
+    console.log("Enabled Listeners.");
 }
 function disableListeners() {
-    console.log("Disable Listeners started.");
-    chrome.runtime.onStartup.removeListener(onInit);
-    chrome.alarms.onAlarm.removeListener(onAlarm);
+    //chrome.runtime.onStartup.removeListener(onInit);
+    //chrome.alarms.onAlarm.removeListener(onAlarm);
 
     chrome.windows.onCreated.removeListener(windowCreatedListener);
     chrome.windows.onRemoved.removeListener(windowRemovedListener);
@@ -236,10 +242,15 @@ function disableListeners() {
     //chrome.runtime.onInstalled.addListener(function callback)
     //open options page
 
-    console.log("Disable Listeners finished.");
+    console.log("Disabled Listeners.");
 }
 
 
 console.log("Google Tabs loading started.");
+//enableListeners();
+chrome.runtime.onStartup.addListener(onInit);
+chrome.alarms.onAlarm.addListener(onAlarm);
+loadSync();
+scheduleSync();
 enableListeners();
 console.log("Google Tabs loading complete.");

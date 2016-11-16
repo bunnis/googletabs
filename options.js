@@ -53,10 +53,8 @@ function loadChanges() {
             links = links + "\n" + items.allTabs[i].url;
         }
 
-        if (links) {
-            textarea.value = links;
-            message('Loaded saved Tabs. - length allTabs ' + items.allTabs.length);
-        }
+        textarea.value = links;
+        message('Loaded saved Tabs. - length allTabs ' + items.allTabs.length);
     });
 }
 function reset() {
