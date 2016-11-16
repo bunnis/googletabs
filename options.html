@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+    <title>Google Tabs</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        label {
+            display: block;
+        }
+
+        textarea {
+            font-family: monospace;
+        }
+
+        .message {
+            height: 20px;
+            background: #eee;
+            padding: 5px;
+        }
+
+        #content {
+            margin-left: 50px;
+            display: inline-block;
+        }
+
+        #header {
+            display: inline-block;
+        }
+
+        #header img {
+            display: inline-block;
+            height: 100%;
+            float: left;
+        }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <img src="icons/icon64.png"/>
+
+    <div id="content">
+        <h1>Google Tabs</h1>
+    </div>
+
+</div>
+
+<div class="message"></div>
+<ol>
+    <li>Write CSS in this textarea and save</li>
+    s
+</ol>
+<textarea name="localtabs" id="localtabs" cols=80 rows=12
+          placeholder="Here will show the local tabs"></textarea>
+<br/>
+<button class="submit">Save</button>
+<button class="load">Load</button>
+<button class="reset">Reset</button>
+<script src="options.js"></script>
+</body>
+</html>

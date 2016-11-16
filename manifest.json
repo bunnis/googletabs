@@ -1,0 +1,28 @@
+{
+  "name": "Google Tabs",
+  "version": "0.1",
+  "manifest_version": 2,
+  "description": "An extension that saves your open tabs to your google account and syncs them across computers.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "alarms"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "24": "icons/icon24.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "64": "icons/icon64.png",
+    "128": "icons/icon128.png",
+    "256": "icons/icon256.png",
+    "512": "icons/icon512.png"
+  },
+  "options_page": "options.html",
+  "background": {
+    "persistent": true,
+    "scripts": [
+      "tabs.js"
+    ]
+  }
+}
