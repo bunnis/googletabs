@@ -48,13 +48,16 @@ function loadChanges() {
         if (!items.allTabs) {
             return;
         }
-
-        for (var i = 0; i < items.allTabs.length; i++) {
-            links = links + "\n" + items.allTabs[i].url;
+        for (t in items.allTabs) {
+            links = links + items.allTabs[t] + "\n";
         }
+        var s = Object.keys(items.allTabs);
+        //for (var i = 0; i < items.allTabs.length; i++) {
+        //   links = links + "\n" + items.allTabs[i].url;
+        //}
 
         textarea.value = links;
-        message('Loaded saved Tabs. - length allTabs ' + items.allTabs.length);
+        message('Loaded saved Tabs. - length allTabs ' + s.length);
     });
 }
 function reset() {

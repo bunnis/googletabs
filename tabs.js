@@ -39,12 +39,45 @@ function tabClosedListener(tabId, removeInfo) { //gets fired when window or tab 
     //	console.log("updated all tabs - tab closed");
     //	//allTabs = tabs;
     //});
-}
 
+
+}
+function tabCreatedListener(tab) {
+    return;
+    chrome.tabs.query({currentWindow: false}, function (tabs) {
+        //update the others tabs
+
+        var idsToRemove = Object.keys(localTabs);//array with keys
+
+        for (var i = 0; i < tabs.length; i++) {
+            if (changeInfo.url.indexOf("chrome://") == -1) {//maybe unneeded
+                localTabs[tab.id] = tab.url;
+                if (idsToRemove.indexOf(tab.id) > -1) {//remove this id from idsToRemove
+                    idsToRemove = idsToRemove.splice(idsToRemove.indexOf(tab.id), 1);
+                }
+            }
+
+        }
+
+        //update localtabs, by removing the remaining ids (tabs closed)
+        for (var i = 0; i < idsToRemove.length; i++) {
+            delete localTabs[idsToRemove[i]];
+        }
+        //deep copy
+        console.log(localTabs.length);
+        console.log(localTabs);
+        allTabs = JSON.parse(JSON.stringify(localTabs));
+        console.log(allTabs.length);
+        console.log(allTabs);
+    });
+}
 
 function tabUpdatedListener(tabId, changeInfo, tab) { //this event does not get fired when tab or window closes
     //https://developer.chrome.com/extensions/tabs#event-onUpdated
     //alert("Tab Updated");
+    tabUpdatedListenerB(tabId, changeInfo, tab);
+    return;
+
     chrome.tabs.query({currentWindow: false}, function (tabs) {
         //console.log("updated all tabs - tab updated");
         //alert(oi);
@@ -57,6 +90,48 @@ function tabUpdatedListener(tabId, changeInfo, tab) { //this event does not get 
 
     });
 }
+function tabUpdatedListenerB(tabId, changeInfo, tab) {
+    //https://developer.chrome.com/extensions/tabs#event-onUpdated
+    return;
+    //only when loading do we have url present
+    if (changeInfo.status == 'loading' && changeInfo.url) {
+        //if url contains chrome:// or chrome://newtab dont add
+
+
+        localTabs[tab.id] = tab.url;
+        //check which tabs still exist
+        chrome.tabs.query({currentWindow: false}, function (tabs) {
+            //update the others tabs
+
+            var idsToRemove = Object.keys(localTabs);//array with keys
+
+            for (var i = 0; i < tabs.length; i++) {
+                if (changeInfo.url.indexOf("chrome://") == -1) {//maybe unneeded
+                    localTabs[tab.id] = tab.url;
+                    if (idsToRemove.indexOf(tab.id) > -1) {//remove this id from idsToRemove
+                        idsToRemove = idsToRemove.splice(idsToRemove.indexOf(tab.id), 1);
+                    }
+                }
+
+            }
+
+            //update localtabs, by removing the remaining ids (tabs closed)
+            for (var i = 0; i < idsToRemove.length; i++) {
+                delete localTabs[idsToRemove[i]];
+            }
+            //deep copy
+            console.log(localTabs.length);
+            console.log(localTabs);
+            allTabs = JSON.parse(JSON.stringify(localTabs));
+            console.log(allTabs.length);
+            console.log(allTabs);
+        });
+    }
+
+
+}
+
+
 function windowCreatedListener(window) {
 
 
@@ -64,7 +139,7 @@ function windowCreatedListener(window) {
 
     chrome.tabs.query({currentWindow: false}, function (tabs) {
         //disable listeners when executing this logic
-        disableListeners();
+        //disableListeners();
 
         var allTabsClone = JSON.parse(JSON.stringify(allTabs));
 
@@ -129,7 +204,7 @@ function windowCreatedListener(window) {
         }
 
         //enable listeners
-        enableListeners();
+        //enableListeners();
     });
 
 
@@ -150,7 +225,8 @@ function windowRemovedListener(windowId) {
 function loadSync() {
     chrome.storage.sync.get(['allTabs', 'oldTabs', 'version', 'syncversion'], function (items) {
         allTabs = items.allTabs;
-        console.log("sync load alltabs=" + allTabs);
+        var s = Object.keys(allTabs);
+        console.log("sync load alltabs = " + s.length);
     });
 }
 function syncUpdate() {
@@ -162,11 +238,11 @@ function syncUpdate() {
 
         lastSyncVersion = syncVersion;
         var ta = "null";
-
+        var s = Object.keys(allTabs);
         if (allTabs) {
             t = allTabs.length;
         }
-        console.log('Settings saved on sync -' + syncVersion + ' alltabs length ' + t);
+        console.log('Settings saved on sync -' + syncVersion + ' alltabs length ' + s.length);
     });
 }
 function scheduleSync() {//schedule requests between 1 and 60 min
@@ -187,11 +263,44 @@ function scheduleSync() {//schedule requests between 1 and 60 min
 }
 function onAlarm(alarm) {
     console.log('Got alarm', alarm);
+    var args = {currentWindow: false};
+    args = {};
+    chrome.tabs.query(args, function (tabs) {
+        //update the others tabs
+
+        if (tabs.length == 0) {
+            return;
+        }
+        var idsAdded = [];
+        var idsExisting = Object.keys(localTabs);//array with keys
+        console.log("tabs " + tabs.length);
+
+        for (var i = 0; i < tabs.length; i++) {
+            if (tabs[i].url.indexOf("chrome://") == -1) {//maybe unneeded
+                localTabs[tabs[i].id] = tabs[i].url;
+                idsAdded.push(tabs[i].id.toString());
+            }
+
+        }
+
+        //update localtabs, by removing the remaining ids (tabs closed)
+        var idsToRemove = idsExisting.diff(idsAdded);
+        for (var i = 0; i < idsToRemove.length; i++) {
+            delete localTabs[idsToRemove[i]];
+        }
+
+        //deep copy
+        allTabs = JSON.parse(JSON.stringify(localTabs));
+    });
 
     syncUpdate();
-
     scheduleSync();
 }
+Array.prototype.diff = function (a) {
+    return this.filter(function (i) {
+        return a.indexOf(i) < 0;
+    });
+};
 function timeStamp() {
     return Math.round(+new Date() / 1000);//unixTimestamp
 }
