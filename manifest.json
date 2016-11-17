@@ -2,6 +2,9 @@
   "name": "Google Tabs",
   "version": "0.1",
   "manifest_version": 2,
+  "author": "https://github.com/bunnis",
+  "homepage_url": "https://github.com/bunnis/googletabs",
+  "minimum_chrome_version": "32",
   "description": "An extension that saves your open tabs to your google account and syncs them across computers.",
   "permissions": [
     "tabs",
