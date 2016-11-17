@@ -5,6 +5,7 @@
 //restrict to computers only
 //open tabs by their order
 //options sync frequency
+//if changed update, if not dont call sync.storage
 
 //Old pseudo, kept for future notes to self*********************
 //pseudo
@@ -48,7 +49,8 @@ function windowCreatedListener(window) {
         console.log("windows created query all tabs and open correct ones started");
         var allTabsClone = JSON.parse(JSON.stringify(allTabs));
 
-        if (tabs.length == 1 && tabs[0].url.indexOf("chrome://newtab") == -1) { //new window without tabs (session restore)
+
+        if (tabs.length == 1 && tabs[0].url.indexOf("chrome://newtab") == -1) { //new window without tabs (no session restore)
             //restore allTabs
             console.log("restoring all tabs");
             for (t in allTabsClone) {
@@ -72,20 +74,33 @@ function windowCreatedListener(window) {
             for (var t = 0; t < tabs.length; t++) {
                 open_urls.push(tabs[t].url);
             }
-            console.log("open urls = " + open_urls);
-            console.log("saved urls = " + saved_urls);
+            //console.log("open urls = " + open_urls.length);
+            //console.log("saved urls = " + saved_urls.length);
 
             final_urls = arrayUnique(open_urls.concat(saved_urls));
 
+            // console.log("final urls = " + final_urls.length);
             //oepn tabs
             for (var t = 0; t < final_urls.length; t++) {
-                try {
-                    chrome.tabs.create({'url': final_urls[t]});
-                } catch (e) {
-                    alert(e);
+                if (open_urls.indexOf(final_urls[t]) == -1) {
+                    try {
+                        chrome.tabs.create({'url': final_urls[t]});
+                    } catch (e) {
+                        alert(e);
+                    }
                 }
+
             }
+
         }
+
+        //TODO close newtab
+        //var newtab_id = window.tabs[0].id
+        // try {
+        //     chrome.tabs.remove(newtab_id);
+        // } catch (e) {
+        //     alert(e);
+        // }
 
         //enable listeners
         //enableListeners();
@@ -150,8 +165,6 @@ function scheduleSync() {//schedule requests between 1 and 60 min
 }
 function onAlarm(alarm) {
     console.log('Got alarm', alarm);
-    var args = {currentWindow: false};
-    args = {};
 
     allTabsUpdate();
 
@@ -159,9 +172,12 @@ function onAlarm(alarm) {
     scheduleSync();
 }
 function allTabsUpdate() {
+    var args = {currentWindow: false};
+    args = {};
+
     chrome.tabs.query(args, function (tabs) {
         //deep copy
-        var localTabs = JSON.parse(JSON.stringify(localTabs));
+        var localTabs = JSON.parse(JSON.stringify(allTabs));
 
         console.log("updating allTabs");
         if (tabs.length == 0) {
